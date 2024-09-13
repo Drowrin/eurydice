@@ -1,0 +1,18 @@
+[package]
+name = "eurydice"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bon = "2.2.1"
+dotenv = "0.15.0"
+eyre = { version = "0.6.12", features = ["auto-install"] }
+poise = "0.6.1"
+serenity = "0.12.2"
+sqlx = { version = "0.8.0", features = [
+    "chrono",
+    "postgres",
+    "runtime-tokio-rustls",
+] }
+thiserror = "1.0.63"
+tokio = { version = "1.39.2", features = ["full"] }
