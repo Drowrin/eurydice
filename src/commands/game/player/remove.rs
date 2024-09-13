@@ -28,7 +28,9 @@ pub async fn remove(
         delete
         from players
         where user_id = $1 and game_id = $2
-        returning (select title from games where id = $2)
+        returning
+            (select title from games where id = $2),
+            (select role_id from games where id = $2)
         "#,
         user.user.id.get() as i64,
         game,
@@ -38,6 +40,8 @@ pub async fn remove(
 
     match record {
         Ok(record) => {
+            user.remove_role(ctx, record.role_id.unwrap() as u64)
+                .await?;
             ctx.say(format!(
                 "Player {} removed from {}!",
                 user.mention(),

@@ -1,4 +1,4 @@
-use serenity::all::{Mentionable, User};
+use serenity::all::{Member, Mentionable};
 use sqlx::query;
 
 use crate::{commands::game::can_manage, Context, Result};
@@ -9,12 +9,31 @@ pub async fn transfer(
     #[description = "The game to transfer"]
     #[autocomplete = "crate::autocomplete::game_editable"]
     game: i32,
-    #[description = "The user to transfer ownership of the game to"] user: User,
+    #[description = "The user to transfer ownership of the game to"] user: Member,
     #[description = "Cause owner to also leave the game as a player"] also_leave: Option<bool>,
 ) -> Result<()> {
     can_manage(ctx, game).await?;
 
-    if !also_leave.unwrap_or_default() {
+    let role_id = query!(
+        r#"
+        select role_id
+        from games
+        where guild_id = $1 and id = $2
+        "#,
+        ctx.guild_id().unwrap().get() as i64,
+        game,
+    )
+    .fetch_one(&ctx.data().pool)
+    .await?
+    .role_id;
+
+    if also_leave.unwrap_or_default() {
+        ctx.author_member()
+            .await
+            .unwrap()
+            .remove_role(ctx, role_id as u64)
+            .await?;
+    } else {
         query!(
             r#"
             insert
@@ -39,7 +58,7 @@ pub async fn transfer(
         "#,
         ctx.guild_id().unwrap().get() as i64,
         game,
-        user.id.get() as i64,
+        user.user.id.get() as i64,
     )
     .fetch_one(&ctx.data().pool)
     .await?;
@@ -51,10 +70,12 @@ pub async fn transfer(
         where game_id = $1 and user_id = $2
         "#,
         game,
-        user.id.get() as i64,
+        user.user.id.get() as i64,
     )
     .execute(&ctx.data().pool)
     .await?;
+
+    user.add_role(ctx, role_id as u64).await?;
 
     ctx.say(format!(
         "Transferred `{}` to {}",

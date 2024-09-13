@@ -81,6 +81,12 @@ pub async fn create(
             )
             .await?;
 
+        ctx.author_member()
+            .await
+            .unwrap()
+            .add_role(ctx, role.id)
+            .await?;
+
         let returned_game_data = query!(
             r#"
             insert

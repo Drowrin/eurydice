@@ -45,7 +45,9 @@ pub async fn add(
         insert
         into players (user_id, game_id)
         values ($1, $2)
-        returning (select title from games where id = $2)
+        returning
+            (select title from games where id = $2),
+            (select role_id from games where id = $2)
         "#,
         user.user.id.get() as i64,
         game,
@@ -55,6 +57,7 @@ pub async fn add(
 
     match record {
         Ok(record) => {
+            user.add_role(ctx, record.role_id.unwrap() as u64).await?;
             ctx.say(format!(
                 "Player {} added to `{}`!",
                 user.mention(),
