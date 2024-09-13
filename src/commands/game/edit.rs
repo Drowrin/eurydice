@@ -3,17 +3,31 @@ use serenity::all::{ChannelId, RoleId, UserId};
 use sqlx::query;
 
 use crate::{
-    commands::game::{can_manage, game_embed, GameModal},
+    commands::{
+        contextual_args,
+        game::{can_manage, game_embed, GameModal},
+    },
     Context, Result,
 };
 
-#[poise::command(slash_command, check = "can_manage", ephemeral)]
+// TODO: set channel from edit
+
+#[poise::command(slash_command, ephemeral)]
 pub async fn edit(
     ctx: Context<'_>,
     #[description = "The game to edit"]
     #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
+    can_manage(ctx, game).await?;
+
     let maybe_old_game = query!(
         r#"
         select

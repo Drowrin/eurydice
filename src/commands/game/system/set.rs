@@ -1,17 +1,29 @@
 use sqlx::query;
 
-use crate::{commands::game::can_manage, Context, Result};
+use crate::{
+    commands::{contextual_args, game::can_manage},
+    Context, Result,
+};
 
-#[poise::command(slash_command, check = "can_manage", ephemeral)]
+#[poise::command(slash_command, ephemeral)]
 pub async fn set(
     ctx: Context<'_>,
-    #[description = "The game to set the system of"]
-    #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
     #[description = "The system to set"]
     #[autocomplete = "crate::autocomplete::system"]
     system: i32,
+    #[description = "The game to set the system of"]
+    #[autocomplete = "crate::autocomplete::game_editable"]
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
+    can_manage(ctx, game).await?;
+
     let record = query!(
         r#"
         update games

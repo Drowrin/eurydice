@@ -5,13 +5,15 @@ use crate::{
     Context, Result,
 };
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn delete(
     ctx: Context<'_>,
     #[description = "The character to delete"]
     #[autocomplete = "crate::autocomplete::character_editable"]
     character: i32,
 ) -> Result<()> {
+    can_manage(ctx, character).await?;
+
     let maybe_name = query!(
         r#"
         select

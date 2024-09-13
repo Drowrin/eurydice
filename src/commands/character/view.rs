@@ -1,15 +1,26 @@
 use poise::CreateReply;
 use sqlx::query;
 
-use crate::{commands::character::character_embed, Context, Result};
+use crate::{
+    commands::{character::character_embed, contextual_args},
+    Context, Result,
+};
 
 #[poise::command(slash_command)]
 pub async fn view(
     ctx: Context<'_>,
     #[description = "The character to view"]
     #[autocomplete = "crate::autocomplete::character"]
-    character: i32,
+    character: Option<i32>,
 ) -> Result<()> {
+    let character = contextual_args()
+        .character_id_arg(character)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .character_id
+        .unwrap();
+
     let maybe_character = query!(
         r#"
         select

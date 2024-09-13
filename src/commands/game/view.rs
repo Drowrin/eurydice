@@ -2,15 +2,25 @@ use poise::CreateReply;
 use serenity::all::{ChannelId, RoleId, UserId};
 use sqlx::query;
 
-use crate::{commands::game::game_embed, Context, Result};
+use crate::{
+    commands::{contextual_args, game::game_embed},
+    Context, Result,
+};
 
 #[poise::command(slash_command)]
 pub async fn view(
     ctx: Context<'_>,
     #[description = "The game to view"]
     #[autocomplete = "crate::autocomplete::game"]
-    game: i32,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
     let maybe_game = query!(
         r#"
         select

@@ -2,17 +2,30 @@ use poise::{CreateReply, Modal};
 use sqlx::query;
 
 use crate::{
-    commands::character::{can_manage, character_embed, CharacterModal},
+    commands::{
+        character::{can_manage, character_embed, CharacterModal},
+        contextual_args,
+    },
     Context, Result,
 };
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn edit(
     ctx: Context<'_>,
     #[description = "The character to edit"]
     #[autocomplete = "crate::autocomplete::character_editable"]
-    character: i32,
+    character: Option<i32>,
 ) -> Result<()> {
+    let character = contextual_args()
+        .character_id_arg(character)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .character_id
+        .unwrap();
+
+    can_manage(ctx, character).await?;
+
     let maybe_old_character = query!(
         r#"
         select

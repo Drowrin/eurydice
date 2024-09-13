@@ -2,18 +2,30 @@ use poise::{CreateReply, Modal};
 use sqlx::query;
 
 use crate::{
-    commands::character::{character_embed, is_in_game, CharacterModal},
+    commands::{
+        character::{character_embed, is_in_game, CharacterModal},
+        contextual_args,
+    },
     Context, Result,
 };
 
-#[poise::command(slash_command, check = "is_in_game")]
+#[poise::command(slash_command)]
 pub async fn create(
     ctx: Context<'_>,
     #[description = "The name of the character"] name: String,
     #[description = "The game to add the character to"]
     #[autocomplete = "crate::autocomplete::game_joined"]
-    game: i32,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
+    is_in_game(ctx, game).await?;
+
     let already_exists = query!(
         r#"
         select exists(

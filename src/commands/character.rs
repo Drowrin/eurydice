@@ -1,4 +1,4 @@
-use crate::{Context, Data, Error, Result};
+use crate::{Context, Error, Result};
 
 mod assign;
 mod claim;
@@ -8,9 +8,8 @@ mod edit;
 mod release;
 mod view;
 
-use eyre::eyre;
 use poise::Modal;
-use serenity::all::{CreateEmbed, CreateEmbedFooter, Member, ResolvedValue};
+use serenity::all::{CreateEmbed, CreateEmbedFooter, Member};
 use sqlx::query;
 
 #[poise::command(
@@ -89,38 +88,7 @@ pub fn character_embed(
     embed
 }
 
-pub async fn can_manage(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
-    let character_id = match ctx {
-        poise::Context::Application(c) => {
-            let resolved_value = c
-                .args
-                .iter()
-                .find(|a| a.name == "character")
-                .ok_or(eyre!(
-                    "Argument 'character' not found when character::can_manage check was used"
-                ))?
-                .value
-                .clone();
-            match resolved_value {
-                ResolvedValue::Integer(i) => i as i32,
-                ResolvedValue::Autocomplete { .. } => return Ok(true),
-                _ => {
-                    return Err(eyre!(
-                        "Argument 'character' was not an integer when character::can_manage check was used"
-                    )
-                    .into());
-                }
-            }
-        }
-        poise::Context::Prefix(c) => c
-            .args
-            .split_whitespace()
-            .next()
-            .ok_or(eyre!("No args when character::can_manage check was used"))?
-            .parse::<i32>()
-            .map_err(|_| eyre!("Could not parse arg in check character::can_manage"))?,
-    };
-
+pub async fn can_manage(ctx: Context<'_>, character: i32) -> Result<()> {
     if ctx
         .author_member()
         .await
@@ -129,7 +97,7 @@ pub async fn can_manage(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
         .unwrap()
         .manage_messages()
     {
-        return Ok(true);
+        return Ok(());
     }
 
     let record = query!(
@@ -161,62 +129,22 @@ pub async fn can_manage(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
                 )
         )
         "#,
-        character_id,
+        character,
         ctx.author().id.get() as i64
     )
     .fetch_one(&ctx.data().pool)
     .await?;
 
-    Ok(record.exists.unwrap())
+    if record.exists.unwrap() {
+        Ok(())
+    } else {
+        Err(Error::Message(
+            "You don't have permission to do that!".to_string(),
+        ))
+    }
 }
 
-pub async fn is_in_game(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
-    let game_id = match ctx {
-        poise::Context::Application(c) => match c.args.iter().find(|a| a.name == "game") {
-            Some(game_arg) => match game_arg.value.clone() {
-                ResolvedValue::Integer(i) => i as i32,
-                ResolvedValue::Autocomplete { .. } => return Ok(true),
-                _ => {
-                    return Err(eyre!("Argument 'game' was not an integer when character::can_manage check was used").into());
-                }
-            },
-            None => {
-                let resolved_value = c
-                    .args
-                    .iter()
-                    .find(|a| a.name == "character")
-                    .ok_or(eyre!(
-                        "Argument 'character' not found when character::can_manage check was used"
-                    ))?
-                    .value
-                    .clone();
-                match resolved_value {
-                    ResolvedValue::Integer(character_id) => {
-                        let character_id = character_id as i32;
-                        query!(
-                            r#"
-                            select game_id
-                            from characters
-                            where id = $1
-                            "#,
-                            character_id
-                        )
-                        .fetch_one(&ctx.data().pool)
-                        .await?
-                        .game_id
-                    }
-                    ResolvedValue::Autocomplete { .. } => return Ok(true),
-                    _ => {
-                        return Err(eyre!("Argument 'character' was not an integer when character::can_manage check was used").into());
-                    }
-                }
-            }
-        },
-        poise::Context::Prefix(_) => {
-            return Err(eyre!("Somehow got a prefix context in character::is_in_game").into())
-        }
-    };
-
+pub async fn is_in_game(ctx: Context<'_>, game: i32) -> Result<()> {
     let is_player = query!(
         r#"
         select exists (
@@ -228,7 +156,7 @@ pub async fn is_in_game(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
                 user_id = $2
         )
         "#,
-        game_id,
+        game,
         ctx.author().id.get() as i64,
     )
     .fetch_one(&ctx.data().pool)
@@ -237,7 +165,7 @@ pub async fn is_in_game(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
     .unwrap();
 
     if is_player {
-        return Ok(true);
+        return Ok(());
     }
 
     let is_owner = query!(
@@ -251,7 +179,7 @@ pub async fn is_in_game(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
                 owner_id = $2
         )
         "#,
-        game_id,
+        game,
         ctx.author().id.get() as i64,
     )
     .fetch_one(&ctx.data().pool)
@@ -259,5 +187,9 @@ pub async fn is_in_game(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
     .exists
     .unwrap();
 
-    Ok(is_owner)
+    if is_owner {
+        Ok(())
+    } else {
+        Err(Error::Message("You are not in this game!".to_string()))
+    }
 }

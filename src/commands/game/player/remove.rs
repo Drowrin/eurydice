@@ -1,16 +1,28 @@
 use serenity::all::{Member, Mentionable};
 use sqlx::query;
 
-use crate::{commands::game::can_manage, Context, Result};
+use crate::{
+    commands::{contextual_args, game::can_manage},
+    Context, Result,
+};
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn remove(
     ctx: Context<'_>,
+    #[description = "The user to remove from the game"] user: Member,
     #[description = "The game to add a player to"]
     #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
-    #[description = "The user to remove from the game"] user: Member,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
+    can_manage(ctx, game).await?;
+
     let record = query!(
         r#"
         delete

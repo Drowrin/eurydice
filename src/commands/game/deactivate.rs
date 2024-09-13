@@ -1,7 +1,10 @@
 use serenity::all::{EditMember, Member, Mentionable, UserId};
 use sqlx::query;
 
-use crate::{commands::game::can_manage, Context, Result};
+use crate::{
+    commands::{contextual_args, game::can_manage},
+    Context, Result,
+};
 
 fn strip_character_name(member: Member) -> String {
     member
@@ -13,13 +16,22 @@ fn strip_character_name(member: Member) -> String {
         .to_string()
 }
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn deactivate(
     ctx: Context<'_>,
     #[description = "The game to deactivate"]
     #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
+    can_manage(ctx, game).await?;
+
     let players = query!(
         r#"
         select

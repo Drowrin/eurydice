@@ -19,6 +19,9 @@ pub enum Error {
 
     #[error(transparent)]
     Eyre(#[from] eyre::Error),
+
+    #[error("ErrorMessage: {0}")]
+    Message(String),
 }
 
 impl From<sqlx::Error> for Error {
@@ -43,9 +46,19 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
     let r: Result<()> = async {
         match error {
             FrameworkError::Command {
-                error, ctx: _ctx, ..
+                error, ctx, ..
             } => {
                 println!("Command Error: {}", error);
+                match error {
+                    Error::Sqlx(_) => println!("todo: error processing for sqlx"),
+                    Error::Constraint(_) => println!("todo: error processing for contraint"),
+                    Error::NotFound => println!("todo: error processing for notfound"),
+                    Error::Discord(_) => println!("todo: error processing for discord"),
+                    Error::Eyre(_) => println!("todo: error processing for eyre"),
+                    Error::Message(e) => {
+                        ctx.send(msg(e)).await?;
+                    }
+                }
             }
             FrameworkError::CommandCheckFailed { ctx, error, .. } => {
                 if let Some(err) = error {

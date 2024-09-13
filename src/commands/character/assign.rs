@@ -3,7 +3,7 @@ use sqlx::query;
 
 use crate::{commands::character::can_manage, Context, Result};
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn assign(
     ctx: Context<'_>,
     #[description = "The character to assign"]
@@ -11,6 +11,8 @@ pub async fn assign(
     character: i32,
     #[description = "The user to assign the character to"] user: Member,
 ) -> Result<()> {
+    can_manage(ctx, character).await?;
+
     let record = query!(
         r#"
         update players

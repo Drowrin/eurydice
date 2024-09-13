@@ -1,14 +1,27 @@
 use sqlx::query;
 
-use crate::{commands::character::can_manage, Context, Result};
+use crate::{
+    commands::{character::can_manage, contextual_args},
+    Context, Result,
+};
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn release(
     ctx: Context<'_>,
     #[description = "The character to release"]
     #[autocomplete = "crate::autocomplete::character_assigned"]
-    character: i32,
+    character: Option<i32>,
 ) -> Result<()> {
+    let character = contextual_args()
+        .character_id_arg(character)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .character_id
+        .unwrap();
+
+    can_manage(ctx, character).await?;
+
     let record = query!(
         r#"
         update players

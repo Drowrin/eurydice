@@ -3,7 +3,7 @@ use sqlx::query;
 
 use crate::{commands::game::can_manage, Context, Result};
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn transfer(
     ctx: Context<'_>,
     #[description = "The game to transfer"]
@@ -12,6 +12,8 @@ pub async fn transfer(
     #[description = "The user to transfer ownership of the game to"] user: User,
     #[description = "Cause owner to also leave the game as a player"] also_leave: Option<bool>,
 ) -> Result<()> {
+    can_manage(ctx, game).await?;
+
     if !also_leave.unwrap_or_default() {
         query!(
             r#"

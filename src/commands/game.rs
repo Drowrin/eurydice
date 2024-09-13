@@ -1,4 +1,4 @@
-use crate::{Context, Data, Error, Result};
+use crate::{Context, Error, Result};
 
 mod activate;
 mod create;
@@ -11,11 +11,8 @@ mod view;
 mod player;
 mod system;
 
-use eyre::eyre;
 use poise::Modal;
-use serenity::all::{
-    ChannelId, CreateEmbed, CreateEmbedFooter, Mentionable, ResolvedValue, RoleId, UserId,
-};
+use serenity::all::{ChannelId, CreateEmbed, CreateEmbedFooter, Mentionable, RoleId, UserId};
 use sqlx::{
     query,
     types::chrono::{DateTime, Utc},
@@ -41,38 +38,7 @@ pub async fn game(_: Context<'_>) -> Result<()> {
     Ok(())
 }
 
-pub async fn can_manage(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
-    let game_id = match ctx {
-        poise::Context::Application(c) => {
-            let resolved_value = c
-                .args
-                .iter()
-                .find(|a| a.name == "game")
-                .ok_or(eyre!(
-                    "Argument 'game' not found when game::can_manage check was used"
-                ))?
-                .value
-                .clone();
-            match resolved_value {
-                ResolvedValue::Integer(i) => i as i32,
-                ResolvedValue::Autocomplete { .. } => return Ok(true),
-                _ => {
-                    return Err(eyre!(
-                        "Argument 'game' was not an integer when game::can_manage check was used"
-                    )
-                    .into());
-                }
-            }
-        }
-        poise::Context::Prefix(c) => c
-            .args
-            .split_whitespace()
-            .next()
-            .ok_or(eyre!("No args when game::can_manage check was used"))?
-            .parse::<i32>()
-            .map_err(|_| eyre!("Could not parse arg in check game::can_manage"))?,
-    };
-
+pub async fn can_manage(ctx: Context<'_>, game: i32) -> Result<()> {
     if ctx
         .author_member()
         .await
@@ -81,7 +47,7 @@ pub async fn can_manage(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
         .unwrap()
         .manage_messages()
     {
-        return Ok(true);
+        return Ok(());
     }
 
     let record = query!(
@@ -92,13 +58,19 @@ pub async fn can_manage(ctx: poise::Context<'_, Data, Error>) -> Result<bool> {
             where id = $1 and owner_id = $2
         )
         "#,
-        game_id,
+        game,
         ctx.author().id.get() as i64
     )
     .fetch_one(&ctx.data().pool)
     .await?;
 
-    Ok(record.exists.unwrap())
+    if record.exists.unwrap() {
+        Ok(())
+    } else {
+        Err(Error::Message(
+            "You don't have permission to do that!".to_string(),
+        ))
+    }
 }
 
 #[derive(Debug, Default, Modal)]

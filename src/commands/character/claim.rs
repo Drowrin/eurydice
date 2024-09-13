@@ -1,15 +1,26 @@
 use serenity::all::Mentionable;
 use sqlx::query;
 
-use crate::{commands::character::is_in_game, Context, Result};
+use crate::{
+    commands::{character::is_in_game, contextual_args},
+    Context, Result,
+};
 
-#[poise::command(slash_command, check = "is_in_game")]
+#[poise::command(slash_command)]
 pub async fn claim(
     ctx: Context<'_>,
     #[description = "The character to claim"]
     #[autocomplete = "crate::autocomplete::character_assignable"]
     character: i32,
 ) -> Result<()> {
+    let ctx_args = contextual_args()
+        .character_id_arg(Some(character))
+        .ctx(&ctx)
+        .call()
+        .await?;
+
+    is_in_game(ctx, ctx_args.game_id).await?;
+
     let record = query!(
         r#"
         update players

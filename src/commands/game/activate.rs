@@ -1,20 +1,32 @@
 use serenity::all::{EditMember, Member, Mentionable, UserId};
 use sqlx::query;
 
-use crate::{commands::game::can_manage, Context, Result};
+use crate::{
+    commands::{contextual_args, game::can_manage},
+    Context, Result,
+};
 
 fn apply_character_name(member: Member, character_name: String) -> String {
     let base_name = member.display_name().split("(").next().unwrap().trim_end();
     format!("{base_name} ({character_name})")
 }
 
-#[poise::command(slash_command, check = "can_manage")]
+#[poise::command(slash_command)]
 pub async fn activate(
     ctx: Context<'_>,
     #[description = "The game to activate"]
     #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
+    can_manage(ctx, game).await?;
+
     let players = query!(
         r#"
         select
