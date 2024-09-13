@@ -186,7 +186,7 @@ pub async fn character(ctx: Context<'_>, partial: &str) -> Vec<AutocompleteChoic
 
 pub async fn character_editable(ctx: Context<'_>, partial: &str) -> Vec<AutocompleteChoice> {
     if is_mod(&ctx).await {
-        return game(ctx, partial).await;
+        return character(ctx, partial).await;
     }
 
     query!(
