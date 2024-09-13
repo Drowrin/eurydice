@@ -10,8 +10,6 @@ use crate::{
     Context, Result,
 };
 
-// TODO: set channel from edit
-
 #[poise::command(slash_command, ephemeral)]
 pub async fn edit(
     ctx: Context<'_>,
@@ -79,7 +77,7 @@ pub async fn edit(
             game_data.title.clone(),
             game_data.abbreviation.clone(),
             game_data.description.clone(),
-            game_data.image.clone(),
+            game_data.image.clone()
         )
         .fetch_one(&ctx.data().pool)
         .await?;

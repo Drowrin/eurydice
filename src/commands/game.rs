@@ -1,6 +1,7 @@
 use crate::{Context, Error, Result};
 
 mod activate;
+mod channel;
 mod create;
 mod deactivate;
 mod delete;
@@ -24,6 +25,7 @@ use sqlx::{
     subcommands(
         "player::player",
         "system::system",
+        "channel::channel",
         "create::create",
         "view::view",
         "edit::edit",
