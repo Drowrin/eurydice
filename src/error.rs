@@ -61,11 +61,14 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
                 }
             }
             FrameworkError::CommandCheckFailed { ctx, error, .. } => {
-                if let Some(err) = error {
-                    println!("CommandCheckFailed Error: {}", err);
-                    ctx.send(msg("Something went wrong while I was checking if you had permission to do that.")).await?;
-                } else {
-                    ctx.send(msg("You don't have permission to do that!")).await?;
+                match error {
+                    Some(err) => {
+                        println!("CommandCheckFailed Error: {}", err);
+                        ctx.send(msg("Something went wrong while I was checking if you had permission to do that.")).await?;
+                    }
+                    None => {
+                                    ctx.send(msg("You don't have permission to do that!")).await?;
+                                }
                 }
             }
             FrameworkError::Setup {

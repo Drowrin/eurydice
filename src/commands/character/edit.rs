@@ -39,12 +39,13 @@ pub async fn edit(
     .fetch_optional(&ctx.data().pool)
     .await?;
 
-    let old_character = if let Some(old_character) = maybe_old_character {
-        old_character
-    } else {
-        ctx.say("Character not found! Not sure how you got here...")
-            .await?;
-        return Ok(());
+    let old_character = match maybe_old_character {
+        Some(old_character) => old_character,
+        _ => {
+            ctx.say("Character not found! Not sure how you got here...")
+                .await?;
+            return Ok(());
+        }
     };
 
     let defaults = CharacterModal {
@@ -79,15 +80,14 @@ pub async fn edit(
         .fetch_one(&ctx.data().pool)
         .await?;
 
-        let player = if let Some(player_id) = record.player {
-            Some(
+        let player = match record.player {
+            Some(player_id) => Some(
                 ctx.guild_id()
                     .unwrap()
                     .member(ctx, player_id as u64)
                     .await?,
-            )
-        } else {
-            None
+            ),
+            _ => None,
         };
 
         ctx.send(

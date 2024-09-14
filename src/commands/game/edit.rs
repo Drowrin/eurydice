@@ -39,12 +39,13 @@ pub async fn edit(
     .fetch_optional(&ctx.data().pool)
     .await?;
 
-    let old_game = if let Some(old_game) = maybe_old_game {
-        old_game
-    } else {
-        ctx.say("Game not found! Not sure how you got here...")
-            .await?;
-        return Ok(());
+    let old_game = match maybe_old_game {
+        Some(old_game) => old_game,
+        _ => {
+            ctx.say("Game not found! Not sure how you got here...")
+                .await?;
+            return Ok(());
+        }
     };
 
     let defaults = GameModal {

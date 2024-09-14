@@ -38,10 +38,9 @@ pub async fn view(
 
     match maybe_character {
         Some(character) => {
-            let player = if let Some(player) = character.player {
-                Some(ctx.guild_id().unwrap().member(ctx, player as u64).await?)
-            } else {
-                None
+            let player = match character.player {
+                Some(player) => Some(ctx.guild_id().unwrap().member(ctx, player as u64).await?),
+                _ => None,
             };
             ctx.send(
                 CreateReply::default().embed(

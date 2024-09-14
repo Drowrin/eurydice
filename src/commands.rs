@@ -105,8 +105,8 @@ pub async fn contextual_args(
 
     let game_id = match maybe_game_id {
         Some(game_id) => game_id,
-        None => {
-            if let Some(Some(character_id)) = character_id_arg {
+        None => match character_id_arg {
+            Some(Some(character_id)) => {
                 let maybe_player = query!(
                     r#"
                     select game_id
@@ -122,12 +122,12 @@ pub async fn contextual_args(
                 .fetch_optional(&ctx.data().pool)
                 .await?;
 
-                if let Some(player) = maybe_player {
-                    player.game_id
-                } else {
-                    return Err(Error::NotFound);
+                match maybe_player {
+                    Some(player) => player.game_id,
+                    _ => return Err(Error::NotFound),
                 }
-            } else {
+            }
+            _ => {
                 let arg = if character_id_arg.is_some() {
                     "character"
                 } else {
@@ -144,7 +144,7 @@ pub async fn contextual_args(
                     .join(" "),
                 ));
             }
-        }
+        },
     };
 
     let character_id = match character_id_arg {
@@ -165,32 +165,34 @@ pub async fn contextual_args(
             .fetch_optional(&ctx.data().pool)
             .await?;
 
-            let player = if let Some(player) = maybe_player {
-                player
-            } else {
-                return Err(Error::Message(
-                    [
-                        "You are not a player in this game.",
-                        "I couldn't figure out what you meant by context.",
-                        "\nTry using this command from a game channel you play in,",
-                        "or hit TAB to select a `character`.",
-                    ]
-                    .join(" "),
-                ));
+            let player = match maybe_player {
+                Some(player) => player,
+                _ => {
+                    return Err(Error::Message(
+                        [
+                            "You are not a player in this game.",
+                            "I couldn't figure out what you meant by context.",
+                            "\nTry using this command from a game channel you play in,",
+                            "or hit TAB to select a `character`.",
+                        ]
+                        .join(" "),
+                    ));
+                }
             };
 
-            if let Some(character_id) = player.character_id {
-                Some(character_id)
-            } else {
-                return Err(Error::Message(
-                    [
-                        "You don't have a character assigned for this game.",
-                        "I couldn't figure out what you meant by context.",
-                        "\nTry using this command from a game channel,",
-                        "or hit TAB to select a `character`.",
-                    ]
-                    .join(" "),
-                ));
+            match player.character_id {
+                Some(character_id) => Some(character_id),
+                _ => {
+                    return Err(Error::Message(
+                        [
+                            "You don't have a character assigned for this game.",
+                            "I couldn't figure out what you meant by context.",
+                            "\nTry using this command from a game channel,",
+                            "or hit TAB to select a `character`.",
+                        ]
+                        .join(" "),
+                    ));
+                }
             }
         }
         None => None,

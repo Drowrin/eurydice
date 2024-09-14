@@ -26,12 +26,13 @@ pub async fn edit(
     .fetch_optional(&ctx.data().pool)
     .await?;
 
-    let old_system = if let Some(old_system) = maybe_old_system {
-        old_system
-    } else {
-        ctx.say("System not found! Not sure how you got here...")
-            .await?;
-        return Ok(());
+    let old_system = match maybe_old_system {
+        Some(old_system) => old_system,
+        _ => {
+            ctx.say("System not found! Not sure how you got here...")
+                .await?;
+            return Ok(());
+        }
     };
 
     let defaults = SystemModal {
