@@ -1,3 +1,4 @@
+use poise::CreateReply;
 use serenity::all::{EditMember, Member, Mentionable, UserId};
 use sqlx::query;
 
@@ -6,7 +7,7 @@ use crate::{
     Context, Result,
 };
 
-fn strip_character_name(member: Member) -> String {
+fn strip_character_name(member: &Member) -> String {
     member
         .display_name()
         .split("(")
@@ -59,6 +60,8 @@ pub async fn deactivate(
     let owner_id = ctx.guild().unwrap().owner_id;
     let mut owner_found: bool = false;
 
+    let mut changes = vec![];
+
     for player in players {
         let player_id = UserId::from(player.user_id as u64);
         if player_id == owner_id {
@@ -67,6 +70,9 @@ pub async fn deactivate(
         }
 
         let member = ctx.guild_id().unwrap().member(ctx, player_id).await?;
+        let nick_name = strip_character_name(&member);
+
+        changes.push(format!("{} --> {}", member.display_name(), nick_name));
 
         ctx.guild_id()
             .unwrap()
@@ -74,24 +80,38 @@ pub async fn deactivate(
                 ctx,
                 player_id,
                 EditMember::new()
-                    .nickname(strip_character_name(member))
+                    .nickname(nick_name)
                     .audit_log_reason("Game deactivated by command"),
             )
             .await?;
     }
 
-    ctx.say(format!("`{game_title}` deactivated!")).await?;
+    ctx.say(format!(
+        "`{game_title}` deactivated!\n```\n{}\n```",
+        changes.join("\n")
+    ))
+    .await?;
 
     if owner_found {
         let owner = ctx.guild_id().unwrap().member(ctx, owner_id).await?;
-        let stripped_name = strip_character_name(owner.clone());
-        if owner.display_name() != stripped_name {
-            ctx.say(format!(
-                "{} needs to run `/nick {}`",
-                owner_id.mention(),
-                strip_character_name(owner)
-            ))
-            .await?;
+        let nick_name = strip_character_name(&owner);
+        let why = "[Why?](<https://github.com/Drowrin/eurydice/wiki/Why-is-the-bot-telling-me-to-use-a-nick-command>)";
+
+        if owner.display_name() != nick_name {
+            if owner_id == ctx.author().id {
+                ctx.send(
+                    CreateReply::default()
+                        .content(format!("You need to run `/nick {nick_name}`\n{why}"))
+                        .ephemeral(true),
+                )
+                .await?;
+            } else {
+                ctx.say(format!(
+                    "{} needs to run `/nick {nick_name}`\n{why}",
+                    owner_id.mention(),
+                ))
+                .await?;
+            }
         }
     }
 
