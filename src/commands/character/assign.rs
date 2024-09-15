@@ -1,3 +1,4 @@
+use poise::CreateReply;
 use serenity::all::{Member, Mentionable};
 use sqlx::query;
 
@@ -13,7 +14,7 @@ pub async fn assign(
 ) -> Result<()> {
     can_manage(ctx, character).await?;
 
-    let record = query!(
+    let maybe_record = query!(
         r#"
         update players
         set character_id = $1
@@ -31,14 +32,27 @@ pub async fn assign(
         user.user.id.get() as i64,
     )
     .fetch_one(&ctx.data().pool)
-    .await?;
+    .await;
 
-    ctx.say(format!(
-        "`{}` assigned to {}.",
-        record.name.unwrap(),
-        user.mention()
-    ))
-    .await?;
-
-    Ok(())
+    match maybe_record {
+        Ok(record) => {
+            ctx.say(format!(
+                "`{}` assigned to {}.",
+                record.name.unwrap(),
+                user.mention()
+            ))
+            .await?;
+            Ok(())
+        }
+        Err(sqlx::Error::RowNotFound) => {
+            ctx.send(
+                CreateReply::default()
+                    .content(format!("{} is not a player in this game!", user.mention()))
+                    .ephemeral(true),
+            )
+            .await?;
+            Ok(())
+        }
+        Err(e) => Err(e.into()),
+    }
 }
