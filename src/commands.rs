@@ -46,7 +46,7 @@ where
                     ctx,
                     CreateInteractionResponse::Message(
                         CreateInteractionResponseMessage::new()
-                            .content(success_message.unwrap_or("System deleted!")),
+                            .content(success_message.unwrap_or("Confirmed!")),
                     ),
                 )
                 .await?;
