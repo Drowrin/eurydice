@@ -45,32 +45,33 @@ fn msg(message: impl AsRef<str>) -> CreateReply {
 pub async fn handle(error: FrameworkError<'_, Data, Error>) {
     let r: Result<()> = async {
         match error {
-            FrameworkError::Command {
-                error, ctx, ..
-            } => {
-                println!("Command Error: {}", error);
-                match error {
-                    Error::Sqlx(_) => println!("todo: error processing for sqlx"),
-                    Error::Constraint(_) => println!("todo: error processing for contraint"),
-                    Error::NotFound => println!("todo: error processing for notfound"),
-                    Error::Discord(_) => println!("todo: error processing for discord"),
-                    Error::Eyre(_) => println!("todo: error processing for eyre"),
-                    Error::Message(e) => {
-                        ctx.send(msg(e)).await?;
-                    }
+            FrameworkError::Command { error, ctx, .. } => match error {
+                Error::Message(e) => {
+                    ctx.send(msg(e)).await?;
                 }
-            }
-            FrameworkError::CommandCheckFailed { ctx, error, .. } => {
-                match error {
-                    Some(err) => {
-                        println!("CommandCheckFailed Error: {}", err);
-                        ctx.send(msg("Something went wrong while I was checking if you had permission to do that.")).await?;
-                    }
-                    None => {
-                                    ctx.send(msg("You don't have permission to do that!")).await?;
-                                }
+                error => {
+                    println!(
+                        "Unhandled Error in Command `{}`: {}",
+                        error,
+                        ctx.command().name
+                    );
+                    ctx.send(msg("Something went wrong, sorry!")).await?;
                 }
-            }
+            },
+            FrameworkError::CommandCheckFailed { ctx, error, .. } => match error {
+                Some(err) => {
+                    println!(
+                        "CommandCheckFailed Error in Command `{}`: {}",
+                        err,
+                        ctx.command().name
+                    );
+                    ctx.send(msg("Something went wrong, sorry!")).await?;
+                }
+                None => {
+                    ctx.send(msg("You don't have permission to do that!"))
+                        .await?;
+                }
+            },
             FrameworkError::Setup {
                 error,
                 framework: _framework,
@@ -78,7 +79,7 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
                 ctx: _ctx,
                 ..
             } => {
-                println!("Setup Error: {}", error);
+                println!("Setup Error: {error}");
             }
             FrameworkError::EventHandler {
                 error,
@@ -87,10 +88,10 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
                 framework: _framework,
                 ..
             } => {
-                println!("EventHandler Error: {}", error);
+                println!("EventHandler Error: {error}");
             }
             FrameworkError::CommandPanic { payload, ctx, .. } => {
-                println!("Command Panic ({}): {payload:?}", ctx.command().name);
+                println!("Command Panic ({}): {:?}", ctx.command().name, payload);
             }
             FrameworkError::ArgumentParse {
                 error,
@@ -98,7 +99,7 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
                 ctx: _ctx,
                 ..
             } => {
-                println!("ArgumentParse Error: {}", error);
+                println!("ArgumentParse Error: {error}");
             }
             FrameworkError::CommandStructureMismatch {
                 description,
@@ -126,19 +127,24 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
                 ctx,
                 ..
             } => {
-                ctx.send(msg("You don't have permission to do that!")).await?;
+                ctx.send(msg("You don't have permission to do that!"))
+                    .await?;
             }
             FrameworkError::NotAnOwner { ctx, .. } => {
-                ctx.send(msg("You don't have permission to do that!")).await?;
+                ctx.send(msg("You don't have permission to do that!"))
+                    .await?;
             }
             FrameworkError::GuildOnly { ctx, .. } => {
-                ctx.send(msg("This command can only be run in a server.")).await?;
+                ctx.send(msg("This command can only be run in a server."))
+                    .await?;
             }
             FrameworkError::DmOnly { ctx, .. } => {
-                ctx.send(msg("This command can only be run in a direct message.")).await?;
+                ctx.send(msg("This command can only be run in a direct message."))
+                    .await?;
             }
             FrameworkError::NsfwOnly { ctx, .. } => {
-                ctx.send(msg("This command can only be run in an NSFW channel.")).await?;
+                ctx.send(msg("This command can only be run in an NSFW channel."))
+                    .await?;
             }
             FrameworkError::UnknownInteraction {
                 ctx: _ctx,
@@ -146,15 +152,16 @@ pub async fn handle(error: FrameworkError<'_, Data, Error>) {
                 interaction,
                 ..
             } => {
-                println!("UnknownInteraction Error: {interaction:?}");
+                println!("UnknownInteraction Error: {:?}", interaction);
             }
             e => poise::builtins::on_error(e).await?,
         }
 
         Ok(())
-    }.await;
+    }
+    .await;
 
     if let Err(e) = r {
-        println!("Error while handling errors: {e}");
+        println!("Error while handling errors: {}", e);
     }
 }
