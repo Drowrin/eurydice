@@ -10,7 +10,7 @@ use crate::{
 pub async fn claim(
     ctx: Context<'_>,
     #[description = "The character to claim"]
-    #[autocomplete = "crate::autocomplete::character_assignable"]
+    #[autocomplete = "crate::autocomplete::character_claimable"]
     character: i32,
 ) -> Result<()> {
     let ctx_args = contextual_args()

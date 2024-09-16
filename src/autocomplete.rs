@@ -274,7 +274,7 @@ pub async fn character_assigned(ctx: Context<'_>, partial: &str) -> Vec<Autocomp
     .collect()
 }
 
-pub async fn character_assignable(ctx: Context<'_>, partial: &str) -> Vec<AutocompleteChoice> {
+pub async fn character_claimable(ctx: Context<'_>, partial: &str) -> Vec<AutocompleteChoice> {
     query!(
         r#"
         select
@@ -283,20 +283,27 @@ pub async fn character_assignable(ctx: Context<'_>, partial: &str) -> Vec<Autoco
         where
             guild_id = $1
             and
-            exists (
-                select 1
-                from players as p
-                where
-                    p.game_id = c.game_id
-                    and
-                    p.user_id = $4
-            )
-            and
             not exists (
                 select 1
                 from players as p
                 where
                     p.character_id = c.id
+            )
+            and
+            exists (
+                select 1
+                from games as g
+                where
+                    g.id = c.game_id
+                    and
+                    exists (
+                        select 1
+                        from players as p
+                        where
+                            p.game_id = g.id
+                            and
+                            p.user_id = $4
+                    )
             )
             and (
                 $3 = ''

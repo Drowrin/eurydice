@@ -2,17 +2,25 @@ use poise::CreateReply;
 use serenity::all::{Member, Mentionable};
 use sqlx::query;
 
-use crate::{commands::character::can_manage, Context, Result};
+use crate::{
+    commands::{contextual_args, game::can_manage},
+    Context, Result,
+};
 
 #[poise::command(slash_command)]
 pub async fn assign(
     ctx: Context<'_>,
     #[description = "The character to assign"]
-    #[autocomplete = "crate::autocomplete::character_assignable"]
+    #[autocomplete = "crate::autocomplete::character_editable"]
     character: i32,
     #[description = "The user to assign the character to"] user: Member,
 ) -> Result<()> {
-    can_manage(ctx, character).await?;
+    let ctx_args = contextual_args()
+        .character_id_arg(Some(character))
+        .ctx(&ctx)
+        .call()
+        .await?;
+    can_manage(ctx, ctx_args.game_id).await?;
 
     let maybe_record = query!(
         r#"
