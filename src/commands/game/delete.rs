@@ -1,6 +1,9 @@
 use sqlx::query;
 
-use crate::{commands::confirmation_modal, Context, Result};
+use crate::{
+    commands::{confirmation_modal, contextual_args},
+    Context, Result,
+};
 
 /// Delete a game. Usable by game owners and server moderators.
 #[poise::command(slash_command, ephemeral)]
@@ -8,8 +11,15 @@ pub async fn delete(
     ctx: Context<'_>,
     #[description = "The game to delete"]
     #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
+    game: Option<i32>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
     let maybe_game_data = query!(
         r#"
         select

@@ -2,7 +2,7 @@ use serenity::all::{Member, Mentionable};
 use sqlx::query;
 
 use crate::{
-    commands::{confirmation_modal, game::can_manage},
+    commands::{confirmation_modal, contextual_args, game::can_manage},
     Context, Result,
 };
 
@@ -12,10 +12,17 @@ pub async fn transfer(
     ctx: Context<'_>,
     #[description = "The game to transfer"]
     #[autocomplete = "crate::autocomplete::game_editable"]
-    game: i32,
+    game: Option<i32>,
     #[description = "The user to transfer ownership of the game to"] user: Member,
     #[description = "Cause owner to also leave the game as a player"] also_leave: Option<bool>,
 ) -> Result<()> {
+    let game = contextual_args()
+        .game_id_arg(game)
+        .ctx(&ctx)
+        .call()
+        .await?
+        .game_id;
+
     can_manage(ctx, game).await?;
 
     let game_data = query!(
