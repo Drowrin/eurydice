@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bon = "2.2.1"
+bon = "2.3.0"
 dotenv = "0.15.0"
 eyre = { version = "0.6.12", features = ["auto-install"] }
 poise = "0.6.1"
