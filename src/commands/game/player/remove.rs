@@ -6,6 +6,7 @@ use crate::{
     Context, Result,
 };
 
+/// Remove a player from this game. Usable by game owners and server moderators.
 #[poise::command(slash_command)]
 pub async fn remove(
     ctx: Context<'_>,

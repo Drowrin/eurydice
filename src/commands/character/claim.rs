@@ -6,6 +6,7 @@ use crate::{
     Context, Result,
 };
 
+/// Claim a character that currently has no player. Usable by all players.
 #[poise::command(slash_command)]
 pub async fn claim(
     ctx: Context<'_>,

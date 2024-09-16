@@ -2,6 +2,7 @@ use sqlx::query;
 
 use crate::{commands::confirmation_modal, Context, Result};
 
+/// Delete a game. Usable by game owners and server moderators.
 #[poise::command(slash_command, ephemeral)]
 pub async fn delete(
     ctx: Context<'_>,

@@ -9,6 +9,7 @@ use crate::{
     Context, Result,
 };
 
+/// Edit a character. Usable by a character's player/author, server moderators, and game owners.
 #[poise::command(slash_command)]
 pub async fn edit(
     ctx: Context<'_>,

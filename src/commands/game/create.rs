@@ -7,6 +7,7 @@ use crate::{
     Context, Result,
 };
 
+/// Create a new game in this server. Usable by anyone.
 #[poise::command(slash_command, ephemeral)]
 pub async fn create(
     ctx: Context<'_>,

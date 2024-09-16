@@ -6,6 +6,7 @@ use crate::{
     Context, Result,
 };
 
+/// Edit the details of a system on this server. Usable by server moderators.
 #[poise::command(slash_command, required_permissions = "MANAGE_MESSAGES", ephemeral)]
 pub async fn edit(
     ctx: Context<'_>,

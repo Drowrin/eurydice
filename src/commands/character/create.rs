@@ -9,6 +9,7 @@ use crate::{
     Context, Result,
 };
 
+/// Create a character in a game. Usable by all players.
 #[poise::command(slash_command)]
 pub async fn create(
     ctx: Context<'_>,

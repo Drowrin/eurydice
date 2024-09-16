@@ -3,6 +3,7 @@ use sqlx::query;
 
 use crate::{commands::game::can_manage, Context, Result};
 
+/// Associate this game with a channel. This makes some other commands easier to use in this channel.
 #[poise::command(slash_command, ephemeral)]
 pub async fn set(
     ctx: Context<'_>,

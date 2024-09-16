@@ -5,6 +5,7 @@ use crate::{
     Context, Result,
 };
 
+/// Remove the system association from this game. Usable by game owners and server moderators.
 #[poise::command(slash_command, ephemeral)]
 pub async fn unset(
     ctx: Context<'_>,

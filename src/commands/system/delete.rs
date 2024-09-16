@@ -2,6 +2,7 @@ use sqlx::query;
 
 use crate::{commands::confirmation_modal, Context, Result};
 
+/// Delete a system from this server. Usable by server moderators.
 #[poise::command(slash_command, required_permissions = "MANAGE_MESSAGES", ephemeral)]
 pub async fn delete(
     ctx: Context<'_>,

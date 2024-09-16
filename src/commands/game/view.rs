@@ -7,6 +7,7 @@ use crate::{
     Context, Result,
 };
 
+/// View a game's details. Usable by everyone.
 #[poise::command(slash_command)]
 pub async fn view(
     ctx: Context<'_>,

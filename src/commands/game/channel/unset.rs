@@ -5,6 +5,7 @@ use crate::{
     Context, Result,
 };
 
+/// Remove this game's association with any channel.
 #[poise::command(slash_command, ephemeral)]
 pub async fn unset(
     ctx: Context<'_>,

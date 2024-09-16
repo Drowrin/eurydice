@@ -3,6 +3,7 @@ use sqlx::query;
 
 use crate::{commands::system::system_embed, Context, Result};
 
+/// View a system's details. Usable by everyone.
 #[poise::command(slash_command)]
 pub async fn view(
     ctx: Context<'_>,

@@ -17,6 +17,7 @@ fn strip_character_name(member: &Member) -> String {
         .to_string()
 }
 
+/// Activate this game, reverting all players' nicknames. Usable by game owners and server moderators.
 #[poise::command(slash_command)]
 pub async fn deactivate(
     ctx: Context<'_>,

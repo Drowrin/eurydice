@@ -5,6 +5,7 @@ use crate::{
     Context, Result,
 };
 
+/// Set this game's system. Usable by game owners and server moderators.
 #[poise::command(slash_command, ephemeral)]
 pub async fn set(
     ctx: Context<'_>,

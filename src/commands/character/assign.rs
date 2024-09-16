@@ -7,6 +7,7 @@ use crate::{
     Context, Result,
 };
 
+/// Assign a character to a player. Usable by game owners and server moderators.
 #[poise::command(slash_command)]
 pub async fn assign(
     ctx: Context<'_>,

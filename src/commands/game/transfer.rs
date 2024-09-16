@@ -3,6 +3,7 @@ use sqlx::query;
 
 use crate::{commands::game::can_manage, Context, Result};
 
+/// Transfer ownership of this game to another user. Usable by game owners and server moderators.
 #[poise::command(slash_command)]
 pub async fn transfer(
     ctx: Context<'_>,

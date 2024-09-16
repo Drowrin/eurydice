@@ -5,6 +5,7 @@ use crate::{
     Context, Result,
 };
 
+/// Unassign a character. Usable by a character's player/author, server moderators, and game owners.
 #[poise::command(slash_command)]
 pub async fn release(
     ctx: Context<'_>,

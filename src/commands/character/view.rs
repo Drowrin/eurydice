@@ -6,6 +6,7 @@ use crate::{
     Context, Result,
 };
 
+/// View a character's details. Usable by anyone.
 #[poise::command(slash_command)]
 pub async fn view(
     ctx: Context<'_>,

@@ -6,6 +6,7 @@ use crate::{
     Context, Result,
 };
 
+/// Add a player to this game. Usable by game owners and server moderators.
 #[poise::command(slash_command)]
 pub async fn add(
     ctx: Context<'_>,

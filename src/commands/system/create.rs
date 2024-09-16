@@ -6,6 +6,7 @@ use crate::{
     Context, Result,
 };
 
+/// Create a system that can be used by games in this server. Usable by server moderators.
 #[poise::command(slash_command, required_permissions = "MANAGE_MESSAGES", ephemeral)]
 pub async fn create(
     ctx: Context<'_>,

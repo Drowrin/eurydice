@@ -12,6 +12,7 @@ fn apply_character_name(member: &Member, character_name: String) -> String {
     format!("{base_name} ({character_name})")
 }
 
+/// Activate this game, assigning all players' nicknames. Usable by game owners and server moderators.
 #[poise::command(slash_command)]
 pub async fn activate(
     ctx: Context<'_>,
