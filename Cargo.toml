@@ -14,5 +14,5 @@ sqlx = { version = "0.8.0", features = [
     "postgres",
     "runtime-tokio-rustls",
 ] }
-thiserror = "1.0.63"
+thiserror = "1.0.64"
 tokio = { version = "1.39.2", features = ["full"] }
