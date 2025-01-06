@@ -9,7 +9,7 @@ dotenv = "0.15.0"
 eyre = { version = "0.6.12", features = ["auto-install"] }
 poise = "0.6.1"
 serenity = "0.12.2"
-sqlx = { version = "0.8.0", features = [
+sqlx = { version = "0.8.3", features = [
     "chrono",
     "postgres",
     "runtime-tokio-rustls",
