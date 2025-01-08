@@ -15,4 +15,4 @@ sqlx = { version = "0.8.0", features = [
     "runtime-tokio-rustls",
 ] }
 thiserror = "1.0.64"
-tokio = { version = "1.39.2", features = ["full"] }
+tokio = { version = "1.43.0", features = ["full"] }
